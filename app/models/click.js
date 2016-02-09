@@ -5,7 +5,7 @@ var Click = db.Model.extend({
   tableName: 'clicks',
   hasTimestamps: true,
   link: function() {
-    return this.belongsTo(Link, 'link_id');
+    return this.belongsTo(Link, 'link_id'); //bookshelf
   }
 });
 

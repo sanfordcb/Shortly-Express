@@ -9,14 +9,17 @@ var Link = db.Model.extend({
     visits: 0
   },
   clicks: function() {
-    return this.hasMany(Click);
+    return this.hasMany(Click); //bookshelf
   },
   initialize: function(){
     this.on('creating', function(model, attrs, options){
       var shasum = crypto.createHash('sha1');
       shasum.update(model.get('url'));
-      model.set('code', shasum.digest('hex').slice(0, 5));
+      model.set('code', shasum.digest('hex').slice(0, 5)); //bit.ly/abcd4
     });
+  },
+  user: function() {
+    return this.belongsTo(User, 'user_id')
   }
 });
 
