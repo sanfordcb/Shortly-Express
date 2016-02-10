@@ -14,6 +14,12 @@ var db = Bookshelf.initialize({
 });
 
 db.knex.schema.hasTable('urls').then(function(exists) {
+  if(exists) {
+    db.knex.schema.dropTable('urls');
+  }
+});
+
+db.knex.schema.hasTable('urls').then(function(exists) {
   if (!exists) {
     db.knex.schema.createTable('urls', function (link) {
       link.increments('id').primary();
@@ -30,6 +36,7 @@ db.knex.schema.hasTable('urls').then(function(exists) {
   }
 });
 
+db.knex.schema.dropTable('clicks');
 db.knex.schema.hasTable('clicks').then(function(exists) {
   if (!exists) {
     db.knex.schema.createTable('clicks', function (click) {
@@ -42,6 +49,7 @@ db.knex.schema.hasTable('clicks').then(function(exists) {
   }
 });
 
+db.knex.schema.dropTable('users');
 db.knex.schema.hasTable('users').then(function(exists){
   if(!exists){
     db.knex.schema.createTable('users', function (user){

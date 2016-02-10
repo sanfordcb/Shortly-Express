@@ -47,7 +47,7 @@ function(req, res) {
   });
 });
 
-app.post('/links', util.checkUser,
+app.post('/links', //util.checkUser,
 function(req, res) {
   var uri = req.body.url;
 
@@ -95,19 +95,20 @@ app.get('/login', function(req, res){
 });
 
 app.post('/login', function(req, res){
-  new User({username: username})
+  new User({username: req.body.username})
     .fetch()
     .then(function(user){
       if(!user){
         res.redirect('/login');
+      } else {
+        bcrypt.compare(req.body.password, user.attributes.password, function(error, match){
+          if(match){
+            util.createSession(req, res, user);
+          } else {
+            res.redirect('/login');
+          }
+        })
       }
-      bcrypt.compare(req.body.password, user.get('password'), function(error, match){
-        if(match){
-          utils.createSession(req, res, user);
-        } else {
-          res.redirect('/login');
-        }
-      })
     });
 
   // knex('users').select('username', 'password').then(function(rowUsername, rowPassword){
@@ -130,8 +131,35 @@ app.get('/signup', function(req, res){
 });
 
 app.post('/signup', function(req, res){
-  this.trigger('creating', req.body);
-  res.redirect('/login');
+  new User({username: req.body.username})
+    .fetch().
+    then(function(user) {
+      if(!user) {
+        bcrypt.hash(req.body.password, null, null, function(err, hash) {
+          Users.create({username: req.body.username, password: hash}).then(function(user) {
+            util.createSession(req, res, user);
+          });login
+        });
+        res.redirect('index');
+      } else {
+        bcrypt.compare(req.body.password, user.attributes.password, function(error, match){
+          if(match){
+            util.createSession(req, res, user);
+          } else {
+            res.redirect('/login');
+          }
+        })
+      }
+    });
+});
+
+
+
+app.get('/logout', function(req, res){
+  req.session.destroy(function(err){
+    if(err) console.log(err);
+    res.redirect('/login');
+  });
 });
 
 /************************************************************/
