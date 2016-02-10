@@ -2,7 +2,8 @@ var express = require('express');
 var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
-
+var bcrypt = require('bcrypt-nodejs');
+var session = require('express-session');
 
 var db = require('./app/config');
 var Users = require('./app/collections/users');
@@ -22,25 +23,31 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
 
+app.use(session({
+  secret: 'qwe123qwe124dhgnsduihgsivhiiousdngd5vufgvsu',
+  resave: false,
+  saveUnitialized: true
+}));
 
-app.get('/', 
+
+app.get('/', util.checkUser,
 function(req, res) {
   res.render('index');
 });
 
-app.get('/create', 
+app.get('/create', util.checkUser,
 function(req, res) {
   res.render('index');
 });
 
-app.get('/links', 
+app.get('/links', util.checkUser,
 function(req, res) {
   Links.reset().fetch().then(function(links) {
     res.send(200, links.models);
   });
 });
 
-app.post('/links', 
+app.post('/links', util.checkUser,
 function(req, res) {
   var uri = req.body.url;
 
@@ -77,8 +84,55 @@ function(req, res) {
 /************************************************************/
 // Write your authentication routes here
 /************************************************************/
+// when clicking on shorten button or requesting a shortened link, reroute to login page
+  //on login page, user can click sign up button and we'd route them to signup page
+  //when user logs in, check password with listener from user model
+  //after login, reroute to shorten page
+  //trigger app.get('/create')
 
+app.get('/login', function(req, res){
+  res.render('login');
+});
 
+app.post('/login', function(req, res){
+  new User({username: username})
+    .fetch()
+    .then(function(user){
+      if(!user){
+        res.redirect('/login');
+      }
+      bcrypt.compare(req.body.password, user.get('password'), function(error, match){
+        if(match){
+          utils.createSession(req, res, user);
+        } else {
+          res.redirect('/login');
+        }
+      })
+    });
+
+  // knex('users').select('username', 'password').then(function(rowUsername, rowPassword){
+  //   var username = JSON.parse(req.body.json['username']);
+  //   var password = JSON.parse(req.body.json['password']);
+  //   if(rowUsername === username) {
+  //     var hash = bcrypt.hashSync(password); 
+  //     if(hash === rowPassword) {
+  //       res.redirect('/create');
+  //     } else {
+  //       res.redirect('back');
+  //     }
+  //   } 
+  // });
+  // res.redirect('/signup');
+});
+
+app.get('/signup', function(req, res){
+  res.render('signup');
+});
+
+app.post('/signup', function(req, res){
+  this.trigger('creating', req.body);
+  res.redirect('/login');
+});
 
 /************************************************************/
 // Handle the wildcard route last - if all other routes fail
